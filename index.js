@@ -4,6 +4,7 @@ const boyParser = require('body-parser');
 const cors = require('cors');
 const fileUpload = require('express-fileupload');
 const MongoClient = require('mongodb').MongoClient;
+const { response } = require('express');
 require('dotenv').config()
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.owenr.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
@@ -20,6 +21,7 @@ app.use(fileUpload());
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect(err => {
     const appointmentCollection = client.db("doctorsPortal").collection("appointments");
+    const doctorCollection  = client.db("doctorsPortal").collection("doctors");
     console.log("database connectd");
 
     app.post('/addAppointment', (req, res) => {
@@ -40,7 +42,8 @@ client.connect(err => {
 
     app.post('/addAppointmentsByDate', (req, res) => {
         const date = req.body;
-        console.log(date.date);
+        const email = req.body.email;
+
         appointmentCollection.find({date: date.date}) 
         .toArray((err, document)  => {
             res.send(document)
@@ -51,7 +54,19 @@ client.connect(err => {
         const file = req.files.file;
         const name = req.body.name;
         const email = req.body.email;
-        console.log(name, email, file);
+        const newImg = file.data;
+        const encImg = newImg.toString('base64');
+
+        var image = {
+            contentType: file.mimetype,
+            size: file.size,
+            img: Buffer.from(encImg, 'base64')
+        };
+
+        doctorCollection.insertOne({ name, email, image })
+            .then(result => {
+                res.send(result.insertedCount > 0);
+            })
     })
 
 });
