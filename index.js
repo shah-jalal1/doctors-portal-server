@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const boyParser = require('body-parser');
 const cors = require('cors');
+const fileUpload = require('express-fileupload');
 const MongoClient = require('mongodb').MongoClient;
 require('dotenv').config()
 
@@ -13,6 +14,8 @@ const port = 5000
 
 app.use(cors());
 app.use(boyParser.json());
+app.use(express.static('doctors'));
+app.use(fileUpload());
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect(err => {
@@ -43,6 +46,14 @@ client.connect(err => {
             res.send(document)
         })
     });
+
+    app.post('/addADoctor', (req, res) => {
+        const file = req.files.file;
+        const name = req.body.name;
+        const email = req.body.email;
+        console.log(name, email, file);
+    })
+
 });
 
 app.get('/', (req, res) => {
