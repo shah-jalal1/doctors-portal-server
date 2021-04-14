@@ -44,10 +44,18 @@ client.connect(err => {
         const date = req.body;
         const email = req.body.email;
 
-        appointmentCollection.find({date: date.date}) 
-        .toArray((err, document)  => {
-            res.send(document)
-        })
+        doctorCollection.find({ email: email })
+            .toArray((err, doctors) => {
+                const filter = { date: date.date }
+                if (doctors.length === 0) {
+                    filter.email = email;
+                }
+                appointmentCollection.find(filter)
+                    .toArray((err, documents) => {
+                        console.log(email, date.date, doctors, documents)
+                        res.send(documents);
+                    })
+            })
     });
 
     app.post('/addADoctor', (req, res) => {
