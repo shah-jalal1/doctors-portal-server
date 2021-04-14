@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const boyParser = require('body-parser');
 const cors = require('cors');
+const fs = require('fs-extra');
 const fileUpload = require('express-fileupload');
 const MongoClient = require('mongodb').MongoClient;
 const { response } = require('express');
@@ -21,7 +22,7 @@ app.use(fileUpload());
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect(err => {
     const appointmentCollection = client.db("doctorsPortal").collection("appointments");
-    const doctorCollection  = client.db("doctorsPortal").collection("doctors");
+    const doctorCollection = client.db("doctorsPortal").collection("doctors");
     console.log("database connectd");
 
     app.post('/addAppointment', (req, res) => {
@@ -35,9 +36,9 @@ client.connect(err => {
 
     app.get('/appointments', (req, res) => {
         appointmentCollection.find({})
-        .toArray((err, documents) => {
-            res.send(documents)
-        })
+            .toArray((err, documents) => {
+                res.send(documents)
+            })
     })
 
     app.post('/addAppointmentsByDate', (req, res) => {
@@ -55,6 +56,13 @@ client.connect(err => {
                         console.log(email, date.date, doctors, documents)
                         res.send(documents);
                     })
+            })
+    });
+
+    app.get('/doctors', (req, res) => {
+        doctorCollection.find({})
+            .toArray((err, documents) => {
+                res.send(documents);
             })
     });
 
@@ -76,6 +84,15 @@ client.connect(err => {
                 res.send(result.insertedCount > 0);
             })
     })
+
+    app.post('/isDoctor', (req, res) => {
+        const email = req.body.email;
+        doctorCollection.find({ email: email })
+            .toArray((err, doctors) => {
+                res.send(doctors.length > 0);
+            })
+    })
+
 
 });
 
